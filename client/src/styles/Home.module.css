@@ -1,5 +1,14 @@
-.lorem{
+.logo{
+    position: relative;
+    bottom: 415px;
+    right: 400px;
+    border-radius: 100px;
+}
+.home{
     color:  yellow;
     font-size: 18;
     background-color:   brown;
+}
+.welcomeText{
+    position: relative;
 }
