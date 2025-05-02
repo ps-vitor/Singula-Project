@@ -1,14 +1,14 @@
-import { useEffect, useState, } from 'react'
+import { useEffect } from 'react'
 import  {BrowserRouter, Routes, Route}  from  "react-router-dom";
 import './App.css'
 import  axios from  'axios';
 import  Home  from  './pages/Home.tsx';
-import  Aulas  from  './pages/Aulas.tsx';
-import  Artigos  from  './pages/Artigos.tsx';
+import  Aulas  from  './pages/aulas.tsx';
+import  Artigos  from  './pages/artigos.tsx';
+import AulaDetalhe from './pages/aulaDetalhe.tsx';
+import Layout from './layout/Layout.tsx';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   useEffect(()=>{
     axios.get('https://localhost:5000/api/ping')
       .then(res=>console.log(res.data))
@@ -17,11 +17,14 @@ function App() {
 
   return(
     <BrowserRouter>
-      <Routes>
-        <Route  path="/"  element={<Home  />}/>
-        <Route  path="/aulas"  element={<Aulas />}/>
-        <Route  path="/artigos"  element={<Artigos />}/>
-      </Routes>
+      <Layout>
+        <Routes>
+          <Route  path="/"  element={<Home  />}/>
+          <Route  path="/artigos"  element={<Artigos />}/>
+          <Route  path="/aulas"  element={<Aulas />}/>
+          <Route  path="/aulas/:id"  element={<AulaDetalhe />}/>
+        </Routes>
+      </Layout>
     </BrowserRouter>
   );
 }
