@@ -1,60 +1,57 @@
 .logo{
-    position: fixed; 
+    position: fixed;
     width: 100px;
     top: 20px;
     left: 20px;
     border-radius: 50%;
 }
+
 .menuButton{
-    position: fixed; 
-    width: 20px;
+    background: black;
+    border: none;
+    cursor: pointer;
+    position:   fixed;
+    padding:    5px;
     top: 130px;
-    left: 50px;
+    left: 55px;
+    display:  flex;
+    justify-content:  center;
+    align-items:  center;
 }
 
 .menuContainer {
-  position: relative;
-  display: inline-block;
+    position: relative; 
+    display: inline-block;
 }
 
-.menuButton {
-  background-color: #333;
-  color: white;
-  padding: 10px 16px;
-  font-size: 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.menuButton:hover {
-  background-color: #555;
-}
 
 .dropdown {
-  position: absolute;
-  right: 0;
-  background-color: white;
+  position: fixed;
+  top: 115px; /* Tente ajustar este valor */
+  left: 100px; /* Garante um espaço de 10px à direita do botão */
+  /* background-color: white; */
   min-width: 160px;
-  margin-top: 8px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.2);
   z-index: 20;
+  background-color: black;
   border-radius: 8px;
   overflow: hidden;
+  padding-left: 0;
+  margin-left: 0;
 }
 
 .dropdown li {
   list-style: none;
-  border-bottom: 1px solid #eee;
 }
 
 .dropdown li a {
   display: block;
   padding: 12px;
   text-decoration: none;
-  color: #333;
+  color: white; /* Texto branco */
+  border:   none;
 }
 
 .dropdown li a:hover {
-  background-color: #f0f0f0;
+  background-color: #333;
 }

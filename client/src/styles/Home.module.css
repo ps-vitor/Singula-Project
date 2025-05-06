@@ -4,5 +4,7 @@
     background-color:   brown;
 }
 .welcomeText{
-    position: relative;
+    position: fixed;
+    top: 20px;
+    left:35%;
 }
