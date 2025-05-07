@@ -6,5 +6,11 @@
 .welcomeText{
     position: fixed;
     top: 20px;
-    left:35%;
+    left:   35%;
+}
+
+.homeText{
+    position:   fixed;
+    top: 50%;
+    left: 5%;
 }

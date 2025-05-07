@@ -2,6 +2,9 @@ import  express from    'express';
 import  cors    from    'cors';
 import  dotenv  from    'dotenv';
 
+app.use('/api/artigos',artigosRouter)
+app.use('/api/aulas',aulasRouter)
+
 function    main(){
     dotenv.config();
 
@@ -18,3 +21,4 @@ function    main(){
         console.log(`Server running on port localhost:${PORT}`)
     })
 }
+main();
