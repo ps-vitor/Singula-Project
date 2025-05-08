@@ -1,9 +1,13 @@
 import  express from    'express';
 import  cors    from    'cors';
 import  dotenv  from    'dotenv';
-import  artigosRouter   from    "./routes/artigos.js";
-import  aulasRouter from    "./routes/aulas.js";
 import  path    from    'path';
+import  artigosRouter   from    "./routes/artigos";
+import  aulasRouter from    "./routes/aulas";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function    main(){
     dotenv.config();
@@ -12,16 +16,13 @@ function    main(){
     app.use(cors());
     app.use(express.json());
 
-    app.use("artigos",artigosRouter);
-    app.use("aulas",aulasRouter);
-
-    app.get('ping',(_req,res)=>{
-        res.json({message:'pong'});
+    app.use("/artigos", artigosRouter);
+    app.use("/aulas", aulasRouter);
+    
+    // Por último, catch-all
+    app.get("/*", (_req, res) => {
+      res.sendFile(path.join(__dirname, '..', '..', 'client', 'src', 'index.html'));
     });
-
-    app.get("*",(_req,res)=>{
-        res.sendFile(path.join(__dirname,"..","..","client","src","index.html"));
-    })
 
     const   PORT=process.env.PORT||5000;
     app.listen(PORT,()=>{

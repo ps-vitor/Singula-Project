@@ -23,13 +23,13 @@ export  default function    Aulas(){
             setLoading(true);
             setError(null);
             
-            try{
-                const   resVideos=await fetch()
-            }catch(error:any){
-                setError(error.message);
-            }finally{
-                setLoading(false);
-            }
+            // try{
+                // const   resVideos=await fetch()
+            // }catch(error:any){
+                // setError(error.message);
+            // }finally{
+                // setLoading(false);
+            // }
         };
         fetchAulas();
     },[]);

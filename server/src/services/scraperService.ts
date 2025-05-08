@@ -29,12 +29,12 @@ export  async   function    scrapeChannelVideos(channelUrl:  string):Promise<You
         for(const   id  of  videoIds){
             try{
                 const   url=`https://www.youtube.com/watch?v=${id}`;
+                const   videoUrl=`http://www.youtube.com/embed/${id}`;
+                const   imgUrl=`https://img.youtube.com/vi/${id}/0.jpg`;
                 const   {data:videoHtml}=await   axios.get(url);
                 const   $$=cheerio.load(videoHtml);
                 const   title=$$('meta[name="title"]').attr("content")||"Sem titulo";
                 const   description=$$('meta[name="description"]').attr("content")||"Sem descricao";
-                const   videoUrl=`http://www.youtube.com/embed/${id}`;
-                const   imgUrl=`https://img.youtube.com/vi/${id}/0.jpg`;
 
                 videos.push({videoId:id,
                             titulo:title,
