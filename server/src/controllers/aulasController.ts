@@ -1,16 +1,15 @@
 import  {Request,Response}  from    'express'
 import  {scrapeYoutubeData} from    '../services/scraperService'
 
-interface   VideoCardProps{
+interface   Aula{
     id:number;
-    title:string;
-    videoId:string;
-    descricao?:string;
+    titulo:string;
+    videoId:string; descricao?:string; 
     videoUrl?:string|null;
     imgUrl?:string|null;
 }
 
-export  const   listarAulas=(_req:Request,res:Response)=>{
+export  const   listarAulas=async(_req:Request,res:Response)=>{
     try{
         const   urls=[
             "https://www.youtube.com/@Pr.Singula"
@@ -24,7 +23,7 @@ export  const   listarAulas=(_req:Request,res:Response)=>{
                 aulas.push({
                     id:aulas.length+1,
                     titulo:data.titulo,
-                    videoId:data.id,
+                    videoId:data.videoId,
                     descricao:data.descricao,
                     videoUrl:data.videoUrl,
                     imgUrl:data.imgUrl,
@@ -37,10 +36,6 @@ export  const   listarAulas=(_req:Request,res:Response)=>{
 
     }catch(error){
         console.error(`Erro ao buscar aulas: `,error)
+        res.status(500).json({mensagem:"Erro ao buscar aulas"});
     }
-    router.get("/",(_req,res_=>{
-        res.json([
-            {id:1,titulo:"",videoId:""}
-        ])
-    })
 }
