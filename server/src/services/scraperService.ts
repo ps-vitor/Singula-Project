@@ -1,7 +1,7 @@
 import  axios   from    'axios'
 import  *   as  cheerio from    'cheerio'
 
-interface   YoutubeData{
+export  default interface   YoutubeData{
     videoId:string;
     titulo:string;
     descricao:string;
@@ -9,36 +9,46 @@ interface   YoutubeData{
     imgUrl:string|null
 }
 
-function    isYoutubeUrl(url:string):boolean{
-    return  url.includes('youtube.com/watch?v=')
-}
-
-export  async   function    scrapeYoutubeData(url:  string){
-    if(!isYoutubeUrl(url)){
-        throw   new Error("Url invalida")
-    }
-
+export  async   function    scrapeChannelVideos(channelUrl:  string):Promise<YoutubeData[]>{
     try{
-        const   {data}=await    axios.get(url)
-        const   $=cheerio.load(data)
+        const{data:html}=await   axios.get(channelUrl);
+        const   $=cheerio.load(html);
+        const   videoIds=new    Set<string>();
 
-        const   title=$('meta[name="title"]').attr('content')||"Sem titulo"
-        const   description=$('meta[name="description"]').attr('content')||"Sem descricao"
+        $("img").each((_i,el)=>{
+            const   src=$(el).attr("src");
+            if(!src)return;
+            const   match=src?.match(/vi\/([a-zA-z0-9_-]{11})\//);
+            if(match&&match[1]){
+                videoIds.add(match[1]);
+            }
+        });
 
-        const   videoIdGet=new URL(url).searchParams.get('v')??'desconhecido'
+        const   videos:YoutubeData[]=[];
 
-        const   videoUrl=`https://www.youtube.com/embeded/${videoIdGet}`
-        const   imgUrl=`https://img.youtube.com/embeded/${videoIdGet}/0.jpg`
+        for(const   id  of  videoIds){
+            try{
+                const   url=`https://www.youtube.com/watch?v=${id}`;
+                const   {data:videoHtml}=await   axios.get(url);
+                const   $$=cheerio.load(videoHtml);
+                const   title=$$('meta[name="title"]').attr("content")||"Sem titulo";
+                const   description=$$('meta[name="description"]').attr("content")||"Sem descricao";
+                const   videoUrl=`http://www.youtube.com/embed/${id}`;
+                const   imgUrl=`https://img.youtube.com/vi/${id}/0.jpg`;
 
-        return{
-            videoId:videoIdGet,
-            titulo:title,
-            descricao:description,
-            videoUrl,
-            imgUrl,
+                videos.push({videoId:id,
+                            titulo:title,
+                            descricao:description,
+                            videoUrl,
+                            imgUrl
+                });
+            }catch(err){
+                console.warn(`Erro ao obter dados do video ${id}`);
+            }
         }
-    }catch(error:any){
-        console.error('Error: ',error)
-        throw   new Error("Erro")
+        return  videos;
+    }catch(err){
+        console.error("Erro ao raspar canal:",err);
+        throw   new Error("Erro ao raspar canal.");
     }
 }

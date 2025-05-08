@@ -1,7 +1,4 @@
-import singulaLogo from '/images/singula.jpg'
 import  styles  from  '../styles/Artigos.module.css'
-import { Link } from 'react-router-dom'
-import { useState } from 'react'
 
 export  default function    home(){
   return (

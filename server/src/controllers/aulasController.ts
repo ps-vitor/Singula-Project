@@ -1,41 +1,20 @@
-import  {Request,Response}  from    'express'
-import  {scrapeYoutubeData} from    '../services/scraperService'
-
-interface   Aula{
-    id:number;
-    titulo:string;
-    videoId:string; descricao?:string; 
-    videoUrl?:string|null;
-    imgUrl?:string|null;
-}
+import  {Request,Response}  from    'express';
+import  {scrapeChannelVideos} from    '../services/scraperService';
+import  YoutubeData  from '../services/scraperService';
 
 export  const   listarAulas=async(_req:Request,res:Response)=>{
     try{
-        const   urls=[
-            "https://www.youtube.com/@Pr.Singula"
-        ]
+        const   url="https://www.youtube.com/@Pr.Singula"; 
+        const   aulas=await scrapeChannelVideos(url);
 
-        const   aulas:Aula[]=[]
+        const   lista=aulas.map((aula:YoutubeData,index:number)=>({
+            id:index+1,
+            ...aula
+        }))
 
-        for(const   url of  urls){
-            try{
-                const   data=await  scrapeYoutubeData(url)
-                aulas.push({
-                    id:aulas.length+1,
-                    titulo:data.titulo,
-                    videoId:data.videoId,
-                    descricao:data.descricao,
-                    videoUrl:data.videoUrl,
-                    imgUrl:data.imgUrl,
-                })
-            }catch(error){
-                console.error(`Erro ao raspar ${url}: `,error)
-            }
-        }
-        res.json(aulas)
-
+        res.json(lista);
     }catch(error){
-        console.error(`Erro ao buscar aulas: `,error)
+        console.error(`Erro ao buscar aulas: `,error);
         res.status(500).json({mensagem:"Erro ao buscar aulas"});
     }
 }

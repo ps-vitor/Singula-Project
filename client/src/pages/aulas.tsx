@@ -1,7 +1,7 @@
 import  styles  from  '../styles/Aulas.module.css';
 import VideoCard from '../components/VideoCard';
-import singulaLogo from '/images/singula.jpg';
-import  React,{useState,UseEffect}  from    'react';
+import  {useState,useEffect}  from    'react';
+import  YoutubeData   from    '../../../server/src/services/scraperService';
 
 interface   Aula{
     id:number;
@@ -16,6 +16,7 @@ export  default function    Aulas(){
     const[aulas,setAulas]=useState<Aula[]>([]);
     const[loading,setLoading]=useState(true);
     const[error,setError]=useState<string|null>(null);
+    const[videos,setVideos]=useState<YoutubeData[]>([]);
 
     useEffect(()=>{
         const   fetchAulas=async()=>{
@@ -23,12 +24,7 @@ export  default function    Aulas(){
             setError(null);
             
             try{
-                const   response=await  fetch('/aulas');
-                if(!response.ok){
-                    throw   new Error('Erro ao buscar aulas');
-                }
-                const   data:   Aula[]=await    response.json();
-                setAulas(data);
+                const   resVideos=await fetch()
             }catch(error:any){
                 setError(error.message);
             }finally{
@@ -50,11 +46,11 @@ export  default function    Aulas(){
             <div>
                 <h2>Aulas</h2>
                 <div className={styles.aulas}>
-                     {videos.map((aula)=>(
+                     {videos.map((aula:YoutubeData)=>(
                         <VideoCard
-                            key={aula.id}
-                            id={aula.id}
-                            title={aula.title}
+                            key={aula.videoId}
+                            id={aula.videoId}
+                            title={aula.titulo}
                             videoId={aula.videoId}
                         />
                      ))}
