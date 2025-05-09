@@ -15,14 +15,14 @@ export  async   function    scrapeChannelVideos(channelUrl:  string):Promise<You
         const   $=cheerio.load(html);
         const   videoIds=new    Set<string>();
 
-        $("img").each((_i,el)=>{
-            const   src=$(el).attr("src");
-            if(!src)return;
-            const   match=src?.match(/vi\/([a-zA-z0-9_-]{11})\//);
-            if(match&&match[1]){
-                videoIds.add(match[1]);
-            }
-        });
+        // $("img").each((_i,el)=>{
+            // const   src=$(el).attr("src");
+            // if(!src)return;
+            // const   match=src?.match(/vi\/([a-zA-z0-9_-]{11})\//);
+            // if(match&&match[1]){
+                // videoIds.add(match[1]);
+            // }
+        // });
 
         const   videos:YoutubeData[]=[];
 

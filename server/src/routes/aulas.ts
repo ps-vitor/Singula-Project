@@ -1,7 +1,9 @@
-import  express from    'express';
+import  {Router} from    'express';
 import  {listarAulas}   from    '../controllers/aulasController'
 
-const   router=express.Router()
-router.get("/",listarAulas)
-export  default router
+const   router=Router();
+router.get("/",(req,res)=>{
+    res.json({msg:"rota de aulas"});
+});
+export  default router;
 

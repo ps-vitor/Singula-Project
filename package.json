@@ -9,10 +9,10 @@
     "typescript": "^5.8.3"
   },
   "scripts": {
-    "start": "node server/src/index.ts",
-    "dev": "nodemon server/src/index.ts"
+    "dev": "tsx watch server/src/index.ts"
   },
   "devDependencies": {
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.4"
   }
 }

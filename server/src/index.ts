@@ -2,7 +2,7 @@ import  express from    'express';
 import  cors    from    'cors';
 import  dotenv  from    'dotenv';
 import  path    from    'path';
-import  artigosRouter   from    "./routes/artigos";
+// import  artigosRouter   from    "./routes/artigos";
 import  aulasRouter from    "./routes/aulas";
 import { fileURLToPath } from 'url';
 
@@ -16,11 +16,11 @@ function    main(){
     app.use(cors());
     app.use(express.json());
 
-    app.use("/artigos", artigosRouter);
+    // app.use("/artigos", artigosRouter);
     app.use("/aulas", aulasRouter);
     
     // Por último, catch-all
-    app.get("/*", (_req, res) => {
+    app.get("*", (_req, res) => {
       res.sendFile(path.join(__dirname, '..', '..', 'client', 'src', 'index.html'));
     });
 
