@@ -5,6 +5,7 @@ import  path    from    'path';
 // import  artigosRouter   from    "./routes/artigos";
 import  aulasRouter from    "./routes/aulas";
 import { fileURLToPath } from 'url';
+import  {requestLogger} from    './middleware/log';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,6 +16,7 @@ function    main(){
     const   app=express();
     app.use(cors());
     app.use(express.json());
+    app.use(requestLogger);
 
     // app.use("/artigos", artigosRouter);
     app.use("/aulas", aulasRouter);
