@@ -1,5 +1,6 @@
 import  axios   from    'axios'
 import  *   as  cheerio from    'cheerio'
+import logger   from    '../middleware/logger';
 
 export  default interface   YoutubeData{
     videoId:string;
@@ -10,19 +11,24 @@ export  default interface   YoutubeData{
 }
 
 export  async   function    scrapeChannelVideos(channelUrl:  string):Promise<YoutubeData[]>{
+    if(!channelUrl.include("youtube.com")){
+        throw   new Error("URL_INVALIDA");
+    };
     try{
-        const{data:html}=await   axios.get(channelUrl);
+        const{data:html}=await   axios.get(channelUrl,{
+            timeout:1000,
+        });
         const   $=cheerio.load(html);
         const   videoIds=new    Set<string>();
 
-        // $("img").each((_i,el)=>{
-            // const   src=$(el).attr("src");
-            // if(!src)return;
-            // const   match=src?.match(/vi\/([a-zA-z0-9_-]{11})\//);
-            // if(match&&match[1]){
-                // videoIds.add(match[1]);
-            // }
-        // });
+        $("img").each((_i,el)=>{
+            const   src=$(el).attr("src");
+            if(!src)return;
+            const   match=src?.match(/vi\/([a-zA-z0-9_-]{11})\//);
+            if(match&&match[1]){
+                videoIds.add(match[1]);
+            }
+        });
 
         const   videos:YoutubeData[]=[];
 
@@ -48,7 +54,12 @@ export  async   function    scrapeChannelVideos(channelUrl:  string):Promise<You
         }
         return  videos;
     }catch(err){
-        console.error("Erro ao raspar canal:",err);
-        throw   new Error("Erro ao raspar canal.");
+        if(err  instaceof   AxiosError){
+            logger.error("Erro ao raspar",{
+                error:err.stack,
+                channelUrl
+            });
+        }
+        throw   err;
     }
 }

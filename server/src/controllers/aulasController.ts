@@ -15,6 +15,9 @@ export  const   listarAulas=async(_req:Request,res:Response)=>{
         res.json(lista);
     }catch(error){
         console.error(`Erro ao buscar aulas: `,error);
-        res.status(500).json({mensagem:"Erro ao buscar aulas"});
+        res.status(500).json({
+            code:"YT_SCRAPE_FAILED",
+            mensagem:"Erro ao buscar aulas"
+        });
     }
-}
+};

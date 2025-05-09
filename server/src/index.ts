@@ -28,5 +28,13 @@ function    main(){
     app.listen(PORT,()=>{
         console.log(`Server running on port localhost:${PORT}`)
     })
+
+    app.use((err:Error,req:Request,res:Response,_next:NextFunction)=>{
+        console.error("Erro não tratado:", err.stack);
+        res.status(500).json({
+            error:"Internal Server Error",
+            message:err.message ||  "Ocorreu um erro inesperado."
+        });
+    });
 }
 main();
