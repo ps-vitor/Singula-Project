@@ -1,4 +1,5 @@
 import  winston from    'winston';
+import  {Request,Response,NextFunction} from    "express";
 
 export  const   logger=winston.createLogger({
     level:"debug",
@@ -6,3 +7,11 @@ export  const   logger=winston.createLogger({
     transports:[new winston.transports.Console()],
 });
 
+export  const   requestLogger=(
+    req:Request,
+    res:Response,
+    next:NextFunction
+)=>{
+    logger.info(`[${req.method}]    ${req.url}`);
+    next();
+};

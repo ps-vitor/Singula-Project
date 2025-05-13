@@ -10,6 +10,13 @@
     "strict": true,
     "baseUrl": ".",
     "forceConsistentCasingInFileNames": true,
-    "declaration": true
+    "declaration": true,
+    "paths":{
+      "@test-utils/*":["src/test-utils/*"]
+    },
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
   }
 }

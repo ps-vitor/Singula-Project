@@ -1,5 +1,6 @@
 import  {listarAulas}   from    "../aulasController";
-import  {Request,Responseo}from "express";
+import  {Request,Response}from "express";
+import  {mockResponse}  from    "../../test-utils/mockResponse";
 
 jest.mock("../../services/scraperService");
 
