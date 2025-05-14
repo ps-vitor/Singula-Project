@@ -1,9 +1,9 @@
-import  {Router} from    'express';
-import  {listarAulas}   from    '@/controllers/aulasController'
+// ./server/src/route/listarAulas.ts
 
-const   router=Router();
-router.get("/",(req,res)=>{
-    res.json({msg:"rota de aulas"});
-});
-export  default router;
+import { Router } from "https://deno.land/x/oak@v12.6.1/mod.ts";
+import { listarAulas } from "../controllers/aulasController.ts"; // .ts explícito
 
+const router = new Router();
+router.get("/", listarAulas);
+
+export default router;

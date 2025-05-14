@@ -1,23 +1,15 @@
-import  {Request,Response}  from    'express';
-import  {scrapeChannelVideos} from    "@/services/scraperService";
-import  {YoutubeData}  from '@/services/scraperService';
+// ./server/src/controllers/aulasControllers.ts
 
-export  const   listarAulas=async(_req:Request,res:Response)=>{
-    try{
-        const   url="https://www.youtube.com/@Pr.Singula"; 
-        const   aulas=await scrapeChannelVideos(url);
+import { Context } from "https://deno.land/x/oak/mod.ts";
+import { scraperChannelVideos } from "../services/scraperService.ts";
 
-        const   lista=aulas.map((aula:YoutubeData,index:number)=>({
-            id:index+1,
-            ...aula
-        }))
-
-        res.json(lista);
-    }catch(error){
-        console.error(`Erro ao buscar aulas: `,error);
-        res.status(500).json({
-            code:"YT_SCRAPE_FAILED",
-            mensagem:"Erro ao buscar aulas"
-        });
-    }
+export const listarAulas = async (ctx: Context) => {
+  try {
+    const aulas = await scraperChannelVideos();
+    ctx.response.status = 200;
+    ctx.response.body = aulas;
+  } catch (error) {
+    ctx.response.status = 500;
+    ctx.response.body = { error: "Erro ao obter as aulas" };
+  }
 };

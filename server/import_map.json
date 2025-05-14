@@ -1,0 +1,10 @@
+// ./server/import_map.json
+
+{
+    "imports": {
+      "oak/": "https://deno.land/x/oak@v12.6.1/",
+      "cors": "https://deno.land/x/cors@v1.2.2/mod.ts",
+      "dotenv": "https://deno.land/std@0.204.0/dotenv/mod.ts",
+      "cheerio": "https://deno.land/x/cheerio@1.0.7/mod.ts"
+    }
+  }

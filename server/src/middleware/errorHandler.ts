@@ -1,9 +1,16 @@
-import  {ErrorRequestHandler}   from    "express"
+// ./server/src/middleware/errorHandler.ts
 
-export const    errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
-    console.error("Erro não tratado:",err.stack);
-    res.status(500).json({
-        error:err.name  ||  "Internal Server Error",
-        message:err.message
-    });
-};
+import { Context } from "oak/mod.ts";
+
+export async function errorHandler(context: Context, next: () => Promise<unknown>) {
+    try {
+        await next();
+    } catch (err) {
+        console.error(err);
+        context.response.status = 500;
+        context.response.body = { 
+            code: "INTERNAL_ERROR",
+            message: "Ocorreu um erro interno"
+        };
+    }
+}
