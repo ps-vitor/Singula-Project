@@ -1,6 +1,6 @@
 import  {Request,Response}  from    'express';
-import  {scrapeChannelVideos} from    '../services/scraperService';
-import  YoutubeData  from '../services/scraperService';
+import  {scrapeChannelVideos} from    "@/services/scraperService";
+import  {YoutubeData}  from '@/services/scraperService';
 
 export  const   listarAulas=async(_req:Request,res:Response)=>{
     try{

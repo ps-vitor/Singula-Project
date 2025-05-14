@@ -1,5 +1,5 @@
 import  {Router} from    'express';
-import  {listarAulas}   from    '../controllers/aulasController'
+import  {listarAulas}   from    '@/controllers/aulasController'
 
 const   router=Router();
 router.get("/",(req,res)=>{

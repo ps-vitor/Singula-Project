@@ -1,14 +1,14 @@
-import  {Request,Response}  from    'express';
+// src/test-utils/mockResponse.ts
+import { MockResponse } from './types';
+import  {Response}  from  'express';
 
-export  const   mockResponse=()=>{
-    // status:jest.fn().mockReturnThis(),
-    // json:jest.fn(),
-    // send:jest.fn(),
-    // setHeader:jest.fn(),
-    // end:jest.fn()
-    const   res:Partial<Response>={};
-    res.status=jest.fn().mockReturnValue(res);
-    res.json=jest.fn().mockReturnValue(res);
-    res.send=jest.fn().mockRejectedValue(res);
-    return  res
+export const mockResponse = (): Response => {
+  const res= {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn().mockReturnThis(),
+    send: jest.fn().mockReturnThis(),
+    sendStatus: jest.fn().mockReturnThis(),
+  } as  unknown as  Response;
+  
+  return res;
 };

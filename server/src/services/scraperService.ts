@@ -1,8 +1,8 @@
 import  axios, { AxiosError }   from    'axios'
 import  *   as  cheerio from    'cheerio'
-import {logger}   from    '../middleware/logger';
+import {logger}   from    '@/middleware/logger'
 
-export  default interface   YoutubeData{
+export  interface   YoutubeData{
     videoId:string;
     titulo:string;
     descricao:string;
