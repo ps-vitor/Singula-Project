@@ -1,9 +1,13 @@
 // ./server/src/route/listarAulas.ts
 
-import { Router } from "https://deno.land/x/oak@v12.6.1/mod.ts";
+import { Router } from "../../deps.ts";
 import { listarAulas } from "../controllers/aulasController.ts"; // .ts explícito
+import { Context } from "https://deno.land/x/oak/mod.ts";
 
 const router = new Router();
-router.get("/", listarAulas);
+
+router.get("/",async(ctx:Context)=>{
+    await   listarAulas(ctx);
+})
 
 export default router;
