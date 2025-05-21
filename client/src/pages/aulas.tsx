@@ -1,3 +1,5 @@
+// ./client/src/pages/aulas.tsx
+
 import  styles  from  '../styles/Aulas.module.css';
 import VideoCard from '../components/VideoCard';
 import  {useState,useEffect}  from    'react';

@@ -1,3 +1,5 @@
+// ./client/src/pages/aulaDetalhe.tsx
+
 import { useParams } from "react-router-dom";
 import videos from "../data/videos";
 

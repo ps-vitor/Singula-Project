@@ -1,3 +1,5 @@
+// ./client/src/pages/Home.tsx
+
 import  styles  from  '../styles/Home.module.css'
 
 export  default function    home(){

@@ -1,3 +1,5 @@
+// ./client/src/data/videos.ts
+
 export  interface   Video{
     id:number;
     videoId:string;

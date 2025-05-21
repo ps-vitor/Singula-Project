@@ -1,3 +1,5 @@
+// ./client/src/components/VideoCard.tsx
+
 import  {Link}    from    'react-router-dom'
 import  styles  from    '../styles/Aulas.module.css'
 
