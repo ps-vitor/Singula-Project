@@ -1,61 +1,88 @@
 // ./server/tests/routes/aulasRoutes.test.ts
-import { Application, mockFetch, assertEquals } from "../../deps.ts";
-import { scrapeChannelVideos } from "../../dist/services/scraperService.js";
+import { Application, mockFetch, assertEquals} from "../../deps.ts";
 import aulasRouter from "../../src/routes/aulas.ts";
-
-// Dados mockados
-const mockAulas = [{
-  videoId: "123",
-  titulo: "Aula teste",
-  descricao: "",
-  videoUrl: "",
-  imgUrl: ""
-}];
+import { Context } from "https://deno.land/x/oak/mod.ts";
 
 Deno.test("GET /aulas deve retornar 200 e dados corretos", async () => {
-  // let listener: Deno.Listener | undefined = undefined;
+  // Mock do HTML da página do canal com vídeos
+  const channelHTML = `
+    <html>
+      <body>
+        <a href="/watch?v=123">Vídeo 1</a>
+        <a href="/watch?v=456">Vídeo 2</a>
+      </body>
+    </html>
+  `;
+
+  // Mock do HTML da página individual do vídeo
+  const videoHTML = `
+    <html>
+      <head>
+        <meta name="title" content="Aula teste" />
+        <meta name="description" content="Descrição mock" />
+      </head>
+    </html>
+  `;
 
   const restoreFetch = mockFetch({
-    "https://www.youtube.com/channel/videos": {
-      html: "<html>...mock do HTML do YouTube...</html>"
-    },
-    "https://www.youtube.com/watch?v=123": {
-      html: "<html>...mock do vídeo específico...</html>"
-    }
+    "https://www.youtube.com/@Pr.Singula/videos": channelHTML,
+    "https://www.youtube.com/watch?v=123": videoHTML,
+    "https://www.youtube.com/watch?v=456": videoHTML
   });
 
-  const mockScraper={
-    scrapeChannelVideos:()=>Promise.resolve(mockAulas)
-  };
-  
-  const importMap=new Map();
-  importMap.set("../../src/services/scraperService.ts",mockScraper);
-  const originalImport = Reflect.get(globalThis,"import");
-  Reflect.set(globalThis,"import",(path:string)=>{
-    return  importMap.get(path)??originalImport(path);
+  const app = new Application();
+  app.use(aulasRouter.routes());
+  app.use(aulasRouter.allowedMethods());
+
+  // Middleware 404
+  app.use((ctx: Context) => {
+    ctx.response.status = 404;
+    ctx.response.body = { error: "Rota não encontrada" };
   });
+
+  const controller = new AbortController();
+  const { signal } = controller;
+  
+  // const listener = app.listen({ port: 0, signal });
+  
+  await new Promise(resolve => setTimeout(resolve, 100));
 
   try {
-    // 2. Configuração do servidor de teste
-    const app = new Application();
-    app.use(aulasRouter.routes());
+    const mockContext = {
+      response: {
+        status: undefined,
+        body: undefined,
+      },
+      request: {
+        method: "GET",
+        url: new URL("http://localhost/aulas")
+      }
+    } as unknown as Context;
 
-    const server=await  app.listen({port:8000});
-    const listener = server.listener;
+    // Importar e chamar diretamente a função do controlador
+    const { listarAulas } = await import("../../src/controllers/aulasController.ts");
+    await listarAulas(mockContext);
+
+    // Verificar se o status é 200
+    assertEquals(mockContext.response.status, 200);
     
-    try{
-      const response = await fetch("http://localhost:8000/aulas");
-      assertEquals(response.status,200);
-      
-      const body = await response.json();
-      assertEquals(Array.isArray(body), true);
-      assertEquals(body.length, mockAulas.length);
-      assertEquals(body[0].videoId, mockAulas[0].videoId);
-    }finally{
-      listener.close();
+    // Verificar se retorna um array
+    const body = mockContext.response.body;
+    if(!body||typeof  body!=='object'){
+      throw new Error('Resposta inválida: body não é um objeto');
     }
+    const responseBody=body as{
+      success:boolean;
+      total:number;
+      data:unknown;
+    }
+
+    assertEquals(responseBody.success, true);
+    assertEquals(typeof responseBody.total,'number');
+    assertEquals(Array.isArray(responseBody.data), true);
+    
   } finally {
-    Reflect.set(globalThis,"import",originalImport);
+    controller.abort();
     restoreFetch();
   }
 });

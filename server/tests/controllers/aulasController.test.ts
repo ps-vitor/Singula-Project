@@ -1,6 +1,6 @@
 // ./server/tests/aulasController.test.ts
 import { assertEquals, mockFetch } from "../../deps.ts";
-import { Context } from "oak/mod.ts";
+import { Context } from "../../deps.ts";
 
 // Dados mockados
 const mockAulas = [{

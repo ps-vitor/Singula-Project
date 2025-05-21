@@ -1,6 +1,6 @@
 // ./server/src/middleware/errorHandler.ts
 
-import { Context } from "oak/mod.ts";
+import { Context } from "../../deps.ts";
 
 export async function errorHandler(context: Context, next: () => Promise<unknown>) {
     try {

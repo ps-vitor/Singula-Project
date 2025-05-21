@@ -1,7 +1,7 @@
 // ./server/tests/errorHandler.test.ts
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import { errorHandler } from "../../src/middleware/errorHandler.ts";
-import { Context } from "oak/mod.ts";
+import { Context } from "../../deps.ts";
 
 Deno.test("errorHandler deve capturar erros e retornar 500", async () => {
   const ctx = {

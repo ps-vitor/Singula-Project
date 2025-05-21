@@ -1,8 +1,8 @@
-// ./server/src/services/scraperService.ts
-import axios from "https://esm.sh/axios@1.6.2";  // Importação correta do axios
-import { load,Element } from "https://esm.sh/cheerio@1.0.0-rc.12";
+// ./server/src/services/scraperService.ts 
+import axios from "https://esm.sh/axios";
+import { cheerio } from "../../deps.ts";
+import type { Element } from "../../deps.ts";
 import { logger } from "../middleware/logger.ts";
-import  {cheerio} from  "../../deps.ts";
 
 export interface YoutubeData {
   videoId: string;
@@ -12,24 +12,33 @@ export interface YoutubeData {
   imgUrl: string;
 }
 
+// Função auxiliar para injeção de dependência (útil para testes)
+async function fetchHtml(url: string): Promise<string> {
+  const { data } = await axios.get(url, {
+    timeout: 10000,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+  });
+  return data;
+}
+
 export async function scrapeChannelVideos(
-  channelUrl: string
+  channelUrl: string,
+  httpClient = fetchHtml
 ): Promise<YoutubeData[]> {
   if (!channelUrl.includes("youtube.com")) {
     throw new Error("URL_INVALIDA");
   }
 
   try {
-    const { data: html } = await axios.get(channelUrl, {
-      timeout: 1000,
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-      },
-    });
-
+    // Fazer requisição para a URL do canal
+    const html = await httpClient(channelUrl);
+    
     const $ = cheerio.load(html);
     const videoIds = new Set<string>();
 
+    // Buscar por links de vídeos no HTML
     $('a[href*="/watch?v="]').each((_i: number, el: Element) => {
       const href = $(el).attr("href");
       const match = href?.match(/v=([a-zA-Z0-9_-]{11})/);
@@ -38,8 +47,11 @@ export async function scrapeChannelVideos(
       }
     });
 
+    console.log(`Encontrados ${videoIds.size} vídeos únicos`);
+
     const videos: YoutubeData[] = [];
 
+    // Processar cada vídeo encontrado
     await Promise.all(
       Array.from(videoIds).map(async (id) => {
         try {
@@ -47,18 +59,18 @@ export async function scrapeChannelVideos(
           const videoUrl = `https://www.youtube.com/embed/${id}`;
           const imgUrl = `https://img.youtube.com/vi/${id}/0.jpg`;
 
-          const { data: videoHtml } = await axios.get(url, {
-            timeout: 5000,
-          });
+          const videoHtml = await httpClient(url);
 
-          const $$ = load(videoHtml);
-          const titulo = $$('meta[name="title"]').attr("content") || "";
-          const descricao = $$('meta[name="description"]').attr("content") || "";
+          const $ = cheerio.load(videoHtml);
+          const titulo = $('meta[name="title"]').attr("content") || 
+                        $('title').text() || 
+                        `Vídeo ${id}`;
+          const descricao = $('meta[name="description"]').attr("content") || "";
 
           videos.push({
             videoId: id,
-            titulo,
-            descricao,
+            titulo: titulo.trim(),
+            descricao: descricao.trim(),
             videoUrl,
             imgUrl,
           });
@@ -71,7 +83,7 @@ export async function scrapeChannelVideos(
     return videos;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`Error: ${errorMessage}`);
+    logger.error(`Error scraping channel: ${errorMessage}`);
     throw error;
   }
 }
