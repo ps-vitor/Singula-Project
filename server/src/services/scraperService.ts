@@ -3,6 +3,7 @@ import axios from "https://esm.sh/axios";
 import { cheerio } from "../../deps.ts";
 import type { Element } from "../../deps.ts";
 import { logger } from "../middleware/logger.ts";
+import { VideoAula } from '../../../shared/types.ts';
 
 export interface YoutubeData {
   videoId: string;
@@ -86,4 +87,11 @@ export async function scrapeChannelVideos(
     logger.error(`Error scraping channel: ${errorMessage}`);
     throw error;
   }
+}
+
+export  function  formatVideoResponse(videos:YoutubeData[]):VideoAula[]{
+  return  videos.map(video=>({
+    id:video.videoId,
+    ...video
+  }));
 }

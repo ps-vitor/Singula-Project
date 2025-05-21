@@ -41,7 +41,7 @@ Deno.test("GET /aulas deve retornar 200 e dados corretos", async () => {
   });
 
   const controller = new AbortController();
-  const { signal } = controller;
+  // const { signal } = controller;
   
   // const listener = app.listen({ port: 0, signal });
   
