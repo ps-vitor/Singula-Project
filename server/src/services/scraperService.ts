@@ -2,6 +2,7 @@
 import axios from "https://esm.sh/axios@1.6.2";  // Importação correta do axios
 import { load,Element } from "https://esm.sh/cheerio@1.0.0-rc.12";
 import { logger } from "../middleware/logger.ts";
+import  {cheerio} from  "../../deps.ts";
 
 export interface YoutubeData {
   videoId: string;
@@ -26,7 +27,7 @@ export async function scrapeChannelVideos(
       },
     });
 
-    const $ = load(html);
+    const $ = cheerio.load(html);
     const videoIds = new Set<string>();
 
     $('a[href*="/watch?v="]').each((_i: number, el: Element) => {

@@ -1,5 +1,6 @@
 // ./server/tests/routes/aulasRoutes.test.ts
 import { Application, mockFetch, assertEquals } from "../../deps.ts";
+import { scrapeChannelVideos } from "../../dist/services/scraperService.js";
 import aulasRouter from "../../src/routes/aulas.ts";
 
 // Dados mockados
@@ -12,7 +13,7 @@ const mockAulas = [{
 }];
 
 Deno.test("GET /aulas deve retornar 200 e dados corretos", async () => {
-  let listener: Deno.Listener | undefined = undefined;
+  // let listener: Deno.Listener | undefined = undefined;
 
   const restoreFetch = mockFetch({
     "https://www.youtube.com/channel/videos": {
@@ -22,40 +23,39 @@ Deno.test("GET /aulas deve retornar 200 e dados corretos", async () => {
       html: "<html>...mock do vídeo específico...</html>"
     }
   });
+
+  const mockScraper={
+    scrapeChannelVideos:()=>Promise.resolve(mockAulas)
+  };
   
-  const originalScraper = await import("../../src/services/scraperService.ts");
-  const originalFn = originalScraper.scrapeChannelVideos;
-  originalScraper.scrapeChannelVideos = () => Promise.resolve(mockAulas);
+  const importMap=new Map();
+  importMap.set("../../src/services/scraperService.ts",mockScraper);
+  const originalImport = Reflect.get(globalThis,"import");
+  Reflect.set(globalThis,"import",(path:string)=>{
+    return  importMap.get(path)??originalImport(path);
+  });
 
   try {
     // 2. Configuração do servidor de teste
     const app = new Application();
     app.use(aulasRouter.routes());
 
-    // CORREÇÃO: Deixar que o TypeScript infira o tipo ou usar uma conversão 
-    // diferente para evitar o erro de tipo ao atribuir o listener
-    // listener = await app.listen({ port: 8000 });
-    // OU, se realmente precisar da conversão, faça isso:
-    listener = await app.listen({ port: 8000 }) as unknown as Deno.Listener;
+    const server=await  app.listen({port:8000});
+    const listener = server.listener;
     
-    const url = `http://localhost:8000/aulas`;
-
-    // 3. Faz a requisição
-    const response = await fetch(url);
-    
-    // 4. Verificações
-    assertEquals(response.status, 200);
-    
-    const body = await response.json();
-    assertEquals(Array.isArray(body), true);
-    assertEquals(body.length, mockAulas.length);
-    assertEquals(body[0].videoId, mockAulas[0].videoId);
-
-  } finally {
-    if (listener) {
+    try{
+      const response = await fetch("http://localhost:8000/aulas");
+      assertEquals(response.status,200);
+      
+      const body = await response.json();
+      assertEquals(Array.isArray(body), true);
+      assertEquals(body.length, mockAulas.length);
+      assertEquals(body[0].videoId, mockAulas[0].videoId);
+    }finally{
       listener.close();
     }
+  } finally {
+    Reflect.set(globalThis,"import",originalImport);
     restoreFetch();
-    originalScraper.scrapeChannelVideos = originalFn;
   }
 });

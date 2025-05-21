@@ -13,15 +13,26 @@ Deno.test("scrapeChannelVideos deve rejeitar com URL inválida", async () => {
 Deno.test("scrapeChannelVideos deve retornar array de vídeos", async () => {
   // Mock do fetch global
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = () => Promise.resolve(new Response(
-    `<html><a href="/watch?v=123">Video 1</a></html>`,
-    { status: 200 }
-  ));
 
-  const videos = await scrapeChannelVideos("https://youtube.com");
-  assert(Array.isArray(videos));
-  assert(videos.length > 0);
+  globalThis.fetch = async () => new Response(`
+    <html>
+      <div id="contents">
+        <ytd-rich-item-renderer>
+          <a href="/watch?v=123">Video 1</a>
+          <img src="thumbnail1.jpg">
+          <h3>Título do Vídeo 1</h3>
+        </ytd-rich-item-renderer>
+      </div>
+    </html>
+  `, { status: 200 });
 
-  // Restaura o fetch original
-  globalThis.fetch = originalFetch;
+  try{
+    const videos = await scrapeChannelVideos("https://youtube.com/@Pr.Singula");
+    assert(Array.isArray(videos),"Deveria retornar um array");
+    assert(videos.length > 0,"Deveria retornar pelo menos um video");
+    assert(videos[0].videoId,"Deveria conter videoID");
+    assert(videos[0].titulo,"Deveria conter titulo");
+  }finally{
+    globalThis.fetch = originalFetch;
+  }
 });
