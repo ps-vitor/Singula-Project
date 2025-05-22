@@ -1,9 +1,15 @@
-import { Application,Router } from "../deps.ts";
-import { join } from "https://deno.land/std/path/mod.ts";
+import { Application, Router } from "../deps.ts";
+import { join, dirname, fromFileUrl } from "https://deno.land/std/path/mod.ts";
 import aulasRouter from "./routes/aulas.ts";
 import { errorHandler } from "./middleware/errorHandler.ts";
 import { requestLogger } from "./middleware/logger.ts";
 import { oakCors } from "../deps.ts";
+import { staticFileContentTypes } from '../../shared/types.ts';
+
+const clientDistPath = join(
+  dirname(fromFileUrl(import.meta.url)),
+  "../../client/dist"
+);
 
 const app = new Application();
 const __dirname = new URL('.', import.meta.url).pathname;
@@ -11,53 +17,6 @@ const __dirname = new URL('.', import.meta.url).pathname;
 // Configurações iniciais existentes
 app.use(errorHandler);
 app.use(requestLogger);
-
-app.use(oakCors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
-
-// Middleware para servir arquivos estáticos do React
-app.use(async (ctx, next) => {
-  try {
-    // Caminho para a pasta build do React (ajuste conforme sua estrutura)
-    const buildPath = join(Deno.cwd(), "../client/build");
-    
-    // Se for uma rota da API, passa para o próximo middleware
-    if (ctx.request.url.pathname.startsWith("/api")) {
-      await next();
-      return;
-    }
-
-    // Tenta servir o arquivo estático
-    const filePath = ctx.request.url.pathname === "/"
-      ? join(buildPath, "index.html")
-      : join(buildPath, ctx.request.url.pathname);
-    
-    const file = await Deno.readFile(filePath);
-    
-    // Define Content-Type apropriado
-    let contentType = "text/html";
-    if (filePath.endsWith(".js")) contentType = "application/javascript";
-    if (filePath.endsWith(".css")) contentType = "text/css";
-    if (filePath.endsWith(".json")) contentType = "application/json";
-    if (filePath.endsWith(".png")) contentType = "image/png";
-    if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) contentType = "image/jpeg";
-
-    ctx.response.headers.set("Content-Type", contentType);
-    ctx.response.body = file;
-  } catch (err:unknown) {
-    console.log(`erro: ${err}`);
-    if (!ctx.request.url.pathname.startsWith("/api")) {
-      const indexHtml = await Deno.readFile(join(Deno.cwd(), "../client/build", "index.html"));
-      ctx.response.headers.set("Content-Type", "text/html");
-      ctx.response.body = indexHtml;
-    } else {
-      await next();
-    }
-  }
-});
 
 // Middlewares globais existentes
 app.use(async (ctx, next) => {
@@ -68,36 +27,107 @@ app.use(async (ctx, next) => {
 });
 
 app.use(async (ctx, next) => {
+  ctx.response.headers.set('Access-Control-Allow-Origin', ctx.request.headers.get('origin') || '*');
+  ctx.response.headers.set('Access-Control-Allow-Credentials', 'true');
+  ctx.response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  ctx.response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  await next();
+});
+
+// Rota raiz da API
+app.use(async (ctx, next) => {
   if (ctx.request.url.pathname === "/") {
     ctx.response.status = 200;
     ctx.response.body = {
       message: "API Singula - Servidor Funcionando",
       version: "1.0.0",
-      endpoints: ["/api/aulas"] // Atualizado para /api/aulas
+      endpoints: [
+        "/api/aulas"
+      ],
     };
     return;
   }
   await next();
 });
 
-// Prefixo para rotas da API
-const apiRouter = new Router({prefix:"/api"});
-apiRouter.use("/aulas", aulasRouter.routes(), aulasRouter.allowedMethods());
+const apiRouter = new Router();
+apiRouter.use("/api/aulas", aulasRouter.routes());
+apiRouter.use("/aulas", aulasRouter.routes()); // duplicate route for backward compatibility
 
-// Middleware 404 (mantido para rotas da API)
+// Health check endpoint
+apiRouter.get("/api/ping", (ctx) => {
+  ctx.response.body = { status: "ok", timestamp: new Date().toISOString() };
+});
+
+app.use(oakCors({
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:8000",
+    /^http?:\/\/localhost(:\d+)?$/
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  preflightContinue:false,
+  optionsSuccessStatus:204
+}));
+
+app.use(apiRouter.routes());
+app.use(apiRouter.allowedMethods());
+
+function getContentType(filePath: string): string {
+  const extension = filePath.split('.').pop()?.toLowerCase() || '';
+  return staticFileContentTypes[extension] || 'application/octet-stream';
+}
+
+// Middleware para servir arquivos estáticos do React - MOVIDO PARA DEPOIS DAS ROTAS DA API
+app.use(async (ctx, next) => {
+  try {
+    // Se for uma rota da API ou aulas, já foi processada acima
+    if (ctx.request.url.pathname.startsWith("/api") || 
+        ctx.request.url.pathname.startsWith("/aulas")) {
+      await next();
+      return;
+    }
+
+    let filePath = ctx.request.url.pathname;
+    if (filePath === "/") filePath = "/index.html";
+    
+    const fullPath = join(clientDistPath, filePath);
+    const file = await Deno.readFile(fullPath);
+    ctx.response.type = getContentType(fullPath);
+    ctx.response.body = file;
+  } catch (err: unknown) {
+    console.log(`erro: ${err}`);
+    // Para qualquer rota que não seja da API e não encontre arquivo físico,
+    // serve o index.html (SPA fallback)
+    if (!ctx.request.url.pathname.startsWith("/api") && 
+        !ctx.request.url.pathname.startsWith("/aulas")) {
+      const indexHtml = await Deno.readFile(join(clientDistPath, "index.html"));
+      ctx.response.type = "text/html";
+      ctx.response.body = indexHtml;
+    } else {
+      await next();
+    }
+  }
+});
+
+// Middleware 404 final para rotas da API que não foram encontradas
 app.use((ctx) => {
-  if (ctx.request.url.pathname.startsWith("/api")) {
+  if (ctx.request.url.pathname.startsWith("/api") || 
+      ctx.request.url.pathname.startsWith("/aulas")) {
     ctx.response.status = 404;
     ctx.response.body = { 
       error: "Rota da API não encontrada",
       path: ctx.request.url.pathname,
       method: ctx.request.method,
+      avaibleEndpoints:[
+        "/api/aulas",
+        "/aulas",
+        "/api/ping",
+      ],
     };
   }
-  // Para rotas não-API, o React Router cuidará do 404
 });
-
-app.use(apiRouter.routes());
-app.use(apiRouter.allowedMethods());
 
 await app.listen({ port: 8000 });
