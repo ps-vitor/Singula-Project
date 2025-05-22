@@ -1,4 +1,6 @@
-import Header from '../components/Header';
+// ./client/src/layout/Layout.tsx
+
+import Header from '../components/Header.tsx';
 import { ReactNode } from 'react';
 
 type LayoutProps = {

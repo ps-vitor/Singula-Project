@@ -1,3 +1,5 @@
+// ./client/src/components/Header.tsx
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import singulaLogo from '/images/singula.jpg'

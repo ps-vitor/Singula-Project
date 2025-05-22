@@ -1,3 +1,5 @@
+// ./client/src/App.tsx
+
 import { useEffect } from 'react'
 import  {BrowserRouter, Routes, Route}  from  "react-router-dom";
 import './App.css'
@@ -10,7 +12,7 @@ import Layout from './layout/Layout.tsx';
 
 function App() {
   useEffect(()=>{
-    axios.get('https://localhost:5000/api/ping')
+    axios.get('https://localhost:8000/api/ping')
       .then(res=>console.log(res.data))
       .catch(err=>console.error(err));
   },[])

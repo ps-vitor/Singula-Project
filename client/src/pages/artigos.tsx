@@ -1,3 +1,5 @@
+// ./client/src/pages/artigos.tsx
+
 import  styles  from  '../styles/Artigos.module.css'
 
 export  default function    home(){
