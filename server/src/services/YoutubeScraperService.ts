@@ -1,6 +1,6 @@
 import { logger } from "../middleware/logger.ts";
 import { VideoAula } from '../../../shared/types.ts';
-import  *   as  scraper   from    '../scrapeChannelVideos';
+import  *   as  scraper   from    '../services/scraperService.ts';
 
 export class YouTubeScraperService {
   constructor(
