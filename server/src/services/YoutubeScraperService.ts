@@ -69,6 +69,3 @@ export{
 }
 
 //done
-=======
-}
->>>>>>> parent of 0ac0ca2 (scraping done.)
