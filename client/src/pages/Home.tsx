@@ -1,20 +1,68 @@
-// ./client/src/pages/Home.tsx
+// ./client/src/pages/aulas.tsx
+import styles from '../styles/Aulas.module.css';
+import VideoCard from '../components/VideoCard';
+import { useState, useEffect } from 'react';
+import { VideoAula } from '../../../shared/types';
 
-import  styles  from  '../styles/Home.module.css'
+export default function Aulas() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [videos, setVideos] = useState<VideoAula[]>([]);
 
-export  default function    home(){
+  useEffect(() => {
+    const fetchAulas = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        console.log("Iniciando requisição...")
+        const response = await fetch('http://localhost:8000/aulas');
+        console.log("Resposta recebida:",response);
+
+        if (!response.ok) {
+          const errorText=await response.text();
+          console.error("Erro na resposta:",errorText);
+          throw new Error('Erro ao carregar aulas');
+        }
+        
+        const data = await response.json();
+        console.log("Dados recebidos:",data);
+        if(!data.success)throw  new Error(data.error);
+        setVideos(data.data||data);
+      } catch (error: any) {
+        console.log("Erro na requisição:",error);
+        setError(error  instanceof  Error?error.message:String(error));
+      } finally {
+        setLoading(false);
+        console.log("Requisição finalizada");
+      }
+    };
+    fetchAulas();
+  }, []);
+
+  if (loading) {
+    return <div>Carregando aulas...</div>;
+  }
+
+  if (error) {
+    return <div>Erro: {error}</div>;
+  }
+
   return (
-        <main className="home">
-          <div  className={styles.welcomeText}>
-          <h1>
-            Bem-vindo(a) ao Singula!
-          </h1>
-          </div>
-          <div  className={styles.homeText}>
-            <h4>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Libero qui, minus distinctio animi soluta molestias voluptate nulla possimus ratione, commodi, provident non impedit aliquid? Quae nisi inventore unde? Pariatur, ut?
-            </h4>
-          </div>
-        </main>
-  )
-};
+    <main>
+      <div>
+        <h2>Aulas</h2>
+        <div className={styles.aulas}>
+          {videos.map((aula) => (
+            <VideoCard
+              key={aula.videoId}
+              id={aula.id}
+              title={aula.titulo}
+              videoId={aula.videoId}
+            />
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
