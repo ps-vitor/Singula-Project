@@ -44,7 +44,13 @@ Deno.test("scrapeChannelVideos deve retornar array de vídeos", async () => {
   };
 
   const { scrapeChannelVideos } = await import("../../src/services/scraperService.ts");
-  const videos = await scrapeChannelVideos("https://www.youtube.com/@Pr.Singula/videos", mockHttpClient);
+  
+  // Corrigido: passando maxVideos como segundo argumento e mockHttpClient como terceiro
+  const videos = await scrapeChannelVideos(
+    "https://www.youtube.com/@Pr.Singula/videos", 
+    20, // maxVideos
+    mockHttpClient // httpClient
+  );
   
   assert(Array.isArray(videos), "Deveria retornar um array");
   assert(videos.length > 0, "Deveria retornar pelo menos um vídeo");
@@ -56,7 +62,7 @@ Deno.test("scrapeChannelVideos deve retornar array de vídeos", async () => {
     assert(videos[0].imgUrl, "Deveria conter imgUrl");
     
     // Verificar formato correto das URLs
-    assert(videos[0].videoUrl.includes("youtube.com/embed/"), "videoUrl deve ser embed URL");
+    assert(videos[0].videoUrl.includes("youtube.com/watch"), "videoUrl deve ser watch URL");
     assert(videos[0].imgUrl.includes("img.youtube.com"), "imgUrl deve ser URL de thumbnail");
     
     // Verificar se o videoId tem o tamanho correto (11 caracteres)

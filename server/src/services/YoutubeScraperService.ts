@@ -1,9 +1,11 @@
+// ./server/src/services/YoutubeScraperService.ts
+
 import { logger } from "../middleware/logger.ts";
 import { VideoAula } from '../../../shared/types.ts';
 import * as scraper from '../services/scraperService.ts';
 import type { YoutubeData } from '../services/scraperService.ts';
 
-export class YouTubeScraperService {
+class YouTubeScraperService {
   constructor(
     private maxRetries: number = 3,
     private maxVideosPerChannel: number = 20
@@ -59,6 +61,10 @@ export class YouTubeScraperService {
       return null;
     }
   }
+}
+
+export{
+  YouTubeScraperService,
 }
 
 //done

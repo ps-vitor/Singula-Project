@@ -1,6 +1,6 @@
 // ./server/src/controllers/aulasControllers.ts
 
-import { Context,RouterContext } from "../../deps.ts";
+import { Context,RouterContext} from "../../deps.ts";
 import { 
   scrapeChannelVideos, 
   searchYouTubeVideos, 
@@ -8,28 +8,29 @@ import {
   isValidYouTubeUrl,
   retryWithBackoff,
 } from "../services/scraperService.ts";
-import  {YouTubeScraperService} from  "../services/YoutubeScraperService.ts";
+import { YouTubeScraperService } from "../services/YoutubeScraperService.ts";
 import { logger } from "../middleware/logger.ts";
 import { VideoAula } from '../../../shared/types.ts';
 
-// Configurações do controller
+// Configurações padrão do controller
 const DEFAULT_CHANNEL_URL = "https://www.youtube.com/@Pr.Singula/videos";
 const DEFAULT_MAX_RESULTS = 20;
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutos em ms
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutos em milissegundos
 
-// Cache simples em memória (para produção, considere Redis)
+// Interface para estrutura do cache
 interface CacheEntry {
   data: VideoAula[];
   timestamp: number;
   url: string;
 }
 
+// Cache simples em memória (ideal usar Redis em produção)
 const cache = new Map<string, CacheEntry>();
 
-// Instância do serviço de scraping
-const scraperService = new YouTubeScraperService(3, 50); // 3 tentativas, máximo 50 vídeos
+// Instância do serviço de scraping com 3 tentativas e max 50 vídeos
+const scraperService = new YouTubeScraperService(3, 50);
 
-// Função auxiliar para limpar cache expirado
+// Remove entradas expiradas do cache
 function cleanExpiredCache(): void {
   const now = Date.now();
   for (const [key, entry] of cache.entries()) {
@@ -39,7 +40,7 @@ function cleanExpiredCache(): void {
   }
 }
 
-// Função auxiliar para obter dados do cache
+// Obtém dados do cache se disponíveis e válidos
 function getCachedData(key: string): VideoAula[] | null {
   cleanExpiredCache();
   const entry = cache.get(key);
@@ -52,7 +53,7 @@ function getCachedData(key: string): VideoAula[] | null {
   return null;
 }
 
-// Função auxiliar para salvar no cache
+// Salva dados no cache
 function setCachedData(key: string, data: VideoAula[], url: string): void {
   cache.set(key, {
     data,
@@ -62,7 +63,7 @@ function setCachedData(key: string, data: VideoAula[], url: string): void {
   logger.info(`Dados cached para: ${key} (${data.length} itens)`);
 }
 
-// Função auxiliar para validar parâmetros de query
+// Valida os parâmetros query maxResults e forceRefresh
 function validateQueryParams(ctx: Context) {
   const url = ctx.request.url;
   const maxResults = url.searchParams.get('maxResults');
@@ -81,7 +82,7 @@ function validateQueryParams(ctx: Context) {
   return { maxResults: parsedMaxResults, forceRefresh };
 }
 
-// Função auxiliar para response de erro padronizado
+// Retorna resposta de erro padronizada
 function errorResponse(ctx: Context, status: number, message: string, error?: unknown) {
   logger.error(`Erro ${status}: ${message}`, error);
   
@@ -97,7 +98,7 @@ function errorResponse(ctx: Context, status: number, message: string, error?: un
   };
 }
 
-// Função auxiliar para response de sucesso padronizado
+// Retorna resposta de sucesso padronizada
 function successResponse(ctx: Context, data: VideoAula[], metadata?: Record<string, any>) {
   ctx.response.status = 200;
   ctx.response.body = {
@@ -138,7 +139,7 @@ export const listarAulas = async (ctx: Context) => {
       }
     }
     
-    // Scraping dos dados
+    // Scraping dos dados com retry/backoff
     const aulas = await retryWithBackoff(
       async () => {
         const rawData = await scrapeChannelVideos(DEFAULT_CHANNEL_URL, maxResults);
@@ -172,7 +173,8 @@ export const listarAulasCanal = async (ctx: Context) => {
   const startTime = Date.now();
   
   try {
-    const body = await ctx.request.body.value;
+    const body = await ctx.request.body.json()
+
     const { channelUrl, maxResults = DEFAULT_MAX_RESULTS } = body;
     
     if (!channelUrl || typeof channelUrl !== 'string') {
@@ -200,7 +202,7 @@ export const listarAulasCanal = async (ctx: Context) => {
       });
     }
     
-    // Scraping dos dados
+    // Scraping dos dados via serviço
     const aulas = await scraperService.getChannelVideos(channelUrl);
     const limitedAulas = aulas.slice(0, maxResults);
     
@@ -254,7 +256,7 @@ export const buscarAulas = async (ctx: Context) => {
       });
     }
     
-    // Buscar dados
+    // Buscar dados via serviço
     const aulas = await scraperService.searchVideos(query.trim(), maxResults);
     
     // Salvar no cache
@@ -299,89 +301,22 @@ export const obterAula = async (ctx: RouterContext<string>) => {
       });
     }
     
-    // Obter dados do vídeo
-    const aula = await scraperService.getVideoDetails(videoId);
-    
-    if (!aula) {
-      return errorResponse(ctx, 404, 'Aula não encontrada');
+    // Obter detalhes via serviço de scraping
+    const aulaDetalhes = await scraperService.getVideoDetails(videoId);
+    if (!aulaDetalhes) {
+      return errorResponse(ctx, 404, 'Vídeo não encontrado');
     }
     
     // Salvar no cache
-    setCachedData(cacheKey, [aula], `video:${videoId}`);
+    setCachedData(cacheKey, [aulaDetalhes], `video:${videoId}`);
     
-    logger.info(`Detalhes obtidos em ${Date.now() - startTime}ms`);
+    logger.info(`Detalhes da aula obtidos em ${Date.now() - startTime}ms`);
     
-    successResponse(ctx, [aula], {
-      processingTime: Date.now() - startTime,
-      videoId
+    successResponse(ctx, [aulaDetalhes], {
+      processingTime: Date.now() - startTime
     });
     
   } catch (error) {
     errorResponse(ctx, 500, 'Erro ao obter detalhes da aula', error);
-  }
-};
-
-/**
- * Limpar cache
- * DELETE /api/aulas/cache
- */
-export const limparCache = async (ctx: Context) => {
-  try {
-    const sizeBefore = cache.size;
-    cache.clear();
-    
-    logger.info(`Cache limpo: ${sizeBefore} entradas removidas`);
-    
-    ctx.response.status = 200;
-    ctx.response.body = {
-      success: true,
-      message: `Cache limpo com sucesso`,
-      entriesRemoved: sizeBefore,
-      timestamp: new Date().toISOString()
-    };
-    
-  } catch (error) {
-    errorResponse(ctx, 500, 'Erro ao limpar cache', error);
-  }
-};
-
-/**
- * Obter estatísticas do cache
- * GET /api/aulas/stats
- */
-export const obterEstatisticas = async (ctx: Context) => {
-  try {
-    cleanExpiredCache();
-    
-    const stats = {
-      cache: {
-        totalEntries: cache.size,
-        entries: Array.from(cache.entries()).map(([key, entry]) => ({
-          key,
-          dataCount: entry.data.length,
-          age: Date.now() - entry.timestamp,
-          source: entry.url,
-          expiresIn: CACHE_DURATION - (Date.now() - entry.timestamp)
-        }))
-      },
-      config: {
-        defaultChannelUrl: DEFAULT_CHANNEL_URL,
-        defaultMaxResults: DEFAULT_MAX_RESULTS,
-        cacheDuration: CACHE_DURATION
-      },
-      system: {
-        timestamp: new Date().toISOString(),
-        uptime: Date.now() // Você pode implementar um uptime real
-      }
-    };
-    
-    ctx.response.status = 200;
-    ctx.response.body = {
-      success: true,
-      data: stats
-    };
-    
-  } catch (error) {
-    errorResponse(ctx, 500, 'Erro ao obter estatísticas', error);
   }
 };

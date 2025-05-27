@@ -1,3 +1,5 @@
+// ./server/src/services/scraperService.ts
+
 import axios from "https://esm.sh/axios";
 import { cheerio } from "../../deps.ts";
 import type { Element } from "../../deps.ts";
@@ -150,7 +152,7 @@ async function scrapeChannelVideos(
     logger.info(`Encontrados ${uniqueVideoIds.length} vídeos únicos`);
 
     if (uniqueVideoIds.length === 0) {
-      logger.warn("Nenhum vídeo encontrado. Possível mudança na estrutura do YouTube.");
+      logger.warning("Nenhum vídeo encontrado. Possível mudança na estrutura do YouTube.");
       return [];
     }
 
@@ -386,7 +388,7 @@ async function retryWithBackoff<T>(
       }
       
       const delayMs = baseDelay * Math.pow(2, attempt);
-      logger.warn(`Tentativa ${attempt + 1} falhou, tentando novamente em ${delayMs}ms: ${error.message}`);
+      logger.warning(`Tentativa ${attempt + 1} falhou, tentando novamente em ${delayMs}ms: ${error.message}`);
       await delay(delayMs);
     }
   }

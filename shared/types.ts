@@ -6,6 +6,10 @@ export interface VideoAula {
   descricao: string;
   videoUrl: string;
   imgUrl: string;
+  url: string;
+  thumbnail: string;
+  duracao?: string;
+  canal?: string;
 }
 
 export  interface ContentTypeMap{
