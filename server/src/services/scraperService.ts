@@ -11,8 +11,6 @@ export interface YoutubeData {
   videoUrl: string;
   imgUrl: string;
   duracao?: string;
-  publicadoEm?: string;
-  views?: string;
   canal?: string;
 }
 
@@ -63,7 +61,7 @@ async function fetchHtml(url: string): Promise<string> {
   }
 }
 
-export async function scrapeChannelVideos(
+async function scrapeChannelVideos(
   channelUrl: string,
   maxVideos: number = 20,
   httpClient = fetchHtml
@@ -205,7 +203,12 @@ export async function scrapeChannelVideos(
   }
 }
 
-async function processVideo(id: string, httpClient: typeof fetchHtml): Promise<YoutubeData> {
+
+interface HttpClient {
+  (url: string): Promise<string>;
+}
+
+async function processVideo(id: string, httpClient: HttpClient): Promise<YoutubeData> {
   const startTime = Date.now();
   const url = `https://www.youtube.com/watch?v=${id}`;
   
@@ -224,8 +227,6 @@ async function processVideo(id: string, httpClient: typeof fetchHtml): Promise<Y
                     "";
 
     let duracao = $('meta[itemprop="duration"]').attr("content") || "";
-    let publicadoEm = $('meta[itemprop="datePublished"]').attr("content") || "";
-    let views = "";
     let canal = "";
 
     // Extrair informações adicionais do JSON do player
@@ -242,7 +243,6 @@ async function processVideo(id: string, httpClient: typeof fetchHtml): Promise<Y
           if (videoDetails) {
             titulo = videoDetails.title || titulo;
             descricao = videoDetails.shortDescription || descricao;
-            views = videoDetails.viewCount || views;
             canal = videoDetails.author || canal;
             duracao = videoDetails.lengthSeconds || duracao;
           }
@@ -262,18 +262,6 @@ async function processVideo(id: string, httpClient: typeof fetchHtml): Promise<Y
       duracao = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    // Formatar número de views
-    if (views && !isNaN(Number(views))) {
-      const viewCount = parseInt(views);
-      if (viewCount >= 1000000) {
-        views = `${(viewCount / 1000000).toFixed(1)}M visualizações`;
-      } else if (viewCount >= 1000) {
-        views = `${(viewCount / 1000).toFixed(1)}K visualizações`;
-      } else {
-        views = `${viewCount} visualizações`;
-      }
-    }
-
     logger.debug(`Processado vídeo ${id} em ${Date.now() - startTime}ms`);
 
     return {
@@ -283,8 +271,6 @@ async function processVideo(id: string, httpClient: typeof fetchHtml): Promise<Y
       videoUrl: `https://www.youtube.com/watch?v=${id}`,
       imgUrl: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
       duracao,
-      publicadoEm,
-      views,
       canal: canal.trim(),
     };
 
@@ -295,7 +281,7 @@ async function processVideo(id: string, httpClient: typeof fetchHtml): Promise<Y
 }
 
 // Função para buscar vídeos por termo de pesquisa
-export async function searchYouTubeVideos(
+async function searchYouTubeVideos(
   query: string,
   maxResults: number = 10,
   httpClient = fetchHtml
@@ -332,7 +318,6 @@ export async function searchYouTubeVideos(
                 videoUrl: `https://www.youtube.com/watch?v=${videoData.videoId}`,
                 imgUrl: videoData.thumbnail?.thumbnails?.[0]?.url || `https://img.youtube.com/vi/${videoData.videoId}/maxresdefault.jpg`,
                 duracao: videoData.lengthText?.simpleText || "",
-                views: videoData.viewCountText?.simpleText || "",
                 canal: videoData.ownerText?.runs?.[0]?.text || ""
               });
             }
@@ -354,7 +339,7 @@ export async function searchYouTubeVideos(
   }
 }
 
-export function formatVideoResponse(videos: YoutubeData[]): VideoAula[] {
+function formatVideoResponse(videos: YoutubeData[]): VideoAula[] {
   return videos.map(video => ({
     id: video.videoId,
     titulo: video.titulo,
@@ -362,17 +347,15 @@ export function formatVideoResponse(videos: YoutubeData[]): VideoAula[] {
     url: video.videoUrl,
     thumbnail: video.imgUrl,
     duracao: video.duracao,
-    publicadoEm: video.publicadoEm,
     videoId: video.videoId,
     videoUrl: video.videoUrl,
     imgUrl: video.imgUrl,
-    views: video.views,
     canal: video.canal,
   }));
 }
 
 // Função utilitária para validar URL do YouTube
-export function isValidYouTubeUrl(url: string): boolean {
+function isValidYouTubeUrl(url: string): boolean {
   const patterns = [
     /^https?:\/\/(www\.)?youtube\.com\/watch\?v=[\w-]+/,
     /^https?:\/\/(www\.)?youtube\.com\/channel\/[\w-]+/,
@@ -385,7 +368,7 @@ export function isValidYouTubeUrl(url: string): boolean {
 }
 
 // Função para retry com backoff exponencial
-export async function retryWithBackoff<T>(
+async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
   baseDelay: number = 1000
@@ -409,4 +392,15 @@ export async function retryWithBackoff<T>(
   }
   
   throw lastError!;
+}
+
+export{
+  extractVideoId,
+  fetchHtml,
+  scrapeChannelVideos,
+  processVideo,
+  searchYouTubeVideos,
+  formatVideoResponse,
+  isValidYouTubeUrl,
+  retryWithBackoff,
 }

@@ -1,6 +1,7 @@
 import { logger } from "../middleware/logger.ts";
 import { VideoAula } from '../../../shared/types.ts';
-import  *   as  scraper   from    '../services/scraperService.ts';
+import * as scraper from '../services/scraperService.ts';
+import type { YoutubeData } from '../services/scraperService.ts';
 
 export class YouTubeScraperService {
   constructor(
@@ -16,9 +17,12 @@ export class YouTubeScraperService {
       );
       
       return scraper.formatVideoResponse(videos);
-    } catch (error: any) {
-      logger.error(`Erro ao obter vídeos do canal ${channelUrl}: ${error.message}`);
-      throw new Error(`CHANNEL_SCRAPE_FAILED: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(`Erro ao obter vídeos do canal ${channelUrl}: ${error.message}`);
+        throw new Error(`CHANNEL_SCRAPE_FAILED: ${error.message}`);
+      }
+      throw new Error(`CHANNEL_SCRAPE_FAILED: Unknown error occurred`);
     }
   }
 
@@ -30,9 +34,12 @@ export class YouTubeScraperService {
       );
       
       return scraper.formatVideoResponse(videos);
-    } catch (error: any) {
-      logger.error(`Erro na busca "${query}": ${error.message}`);
-      throw new Error(`SEARCH_FAILED: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(`Erro na busca "${query}": ${error.message}`);
+        throw new Error(`SEARCH_FAILED: ${error.message}`);
+      }
+      throw new Error(`SEARCH_FAILED: Unknown error occurred`);
     }
   }
 
@@ -41,12 +48,14 @@ export class YouTubeScraperService {
       const video = await scraper.retryWithBackoff(
         () => scraper.processVideo(videoId, scraper.fetchHtml),
         this.maxRetries
-      );
-      
+      ) as YoutubeData;
+
       const formatted = scraper.formatVideoResponse([video]);
       return formatted[0] || null;
-    } catch (error: any) {
-      logger.error(`Erro ao obter detalhes do vídeo ${videoId}: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(`Erro ao obter detalhes do vídeo ${videoId}: ${error.message}`);
+      }
       return null;
     }
   }
