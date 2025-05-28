@@ -1,4 +1,4 @@
-// server/src/api/videos.ts
+// server/src/videos.ts
 import { Router } from "../deps.ts";
 import { YouTubeScraperService } from "./services/YoutubeScraperService.ts";
 

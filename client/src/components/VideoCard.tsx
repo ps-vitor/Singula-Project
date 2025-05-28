@@ -1,34 +1,26 @@
-// ./client/src/components/Header.tsx
+// ./client/src/components/VideoCard.tsx
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import singulaLogo from '/images/singula.jpg'
-import  styles  from  '../styles/Header.module.css'
-import  {FaBars}   from    'react-icons/fa';
+import { Link } from 'react-router-dom';
+import styles from '../styles/Aulas.module.css';
 
-export  default function    Header(){
-    const[open,setOpen]=useState(false)
+interface VideoCardProps {
+  id: string; // Alterado para string para consistência
+  title: string;
+  videoId: string;
+}
 
-    const toggleMenu=()=>{
-      setOpen(prev=>!prev)
-    }
-
-    return(
-        <header className={styles.header}>
-            <Link   to="/"  onClick={()=>setOpen(false)}>
-            <img src={singulaLogo} className={styles.logo} alt="Singula logo" />
-            </Link>
-            <div    className={styles.menuContainer}>
-                <button className={styles.menuButton} onClick={toggleMenu}><FaBars />
-                </button>
-                {open && (
-                  <ul className={styles.dropdown}>
-                    <li><Link to="/"  onClick={toggleMenu}>Início</Link></li>
-                    <li><Link to="/aulas" onClick={toggleMenu}>Aulas</Link></li>
-                    <li><Link to="/artigos" onClick={toggleMenu}>Artigos</Link></li>
-                  </ul>
-                )}
-            </div>
-        </header>
-    )
+export default function VideoCard({ id, videoId, title }: VideoCardProps) {
+  const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+  
+  return (
+    <Link to={`/aulas/${id}`} className={styles.videoCard}>
+      <img 
+        src={thumbnailUrl} 
+        alt={`Thumbnail de ${title}`} 
+        className={styles.thumbnail}
+        loading="lazy"
+      />
+      <h4>{title}</h4>
+    </Link>
+  );
 }

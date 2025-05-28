@@ -12,8 +12,6 @@ export interface YoutubeData {
   descricao: string;
   videoUrl: string;
   imgUrl: string;
-  duracao?: string;
-  canal?: string;
 }
 
 const SCRAPE_TIMEOUT = 15000;
@@ -73,9 +71,7 @@ async function scrapeChannelVideos(
   }
 
   try {
-    logger.info(`Iniciando scraping do canal: ${channelUrl}`);
     
-    // Garantir que estamos na página de vídeos do canal
     const videosUrl = channelUrl.includes('/videos') 
       ? channelUrl 
       : `${channelUrl.replace(/\/$/, '')}/videos`;
@@ -177,7 +173,7 @@ async function scrapeChannelVideos(
             titulo: `Vídeo ${videoId}`,
             descricao: "Descrição não disponível",
             videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
-            imgUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+            imgUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
           };
         }
       });
@@ -228,10 +224,6 @@ async function processVideo(id: string, httpClient: HttpClient): Promise<Youtube
                     $('meta[name="description"]').attr("content") || 
                     "";
 
-    let duracao = $('meta[itemprop="duration"]').attr("content") || "";
-    let canal = "";
-
-    // Extrair informações adicionais do JSON do player
     const scripts = $('script').toArray();
     
     for (const script of scripts) {
@@ -245,8 +237,6 @@ async function processVideo(id: string, httpClient: HttpClient): Promise<Youtube
           if (videoDetails) {
             titulo = videoDetails.title || titulo;
             descricao = videoDetails.shortDescription || descricao;
-            canal = videoDetails.author || canal;
-            duracao = videoDetails.lengthSeconds || duracao;
           }
           break;
         } catch (e) {
@@ -256,14 +246,6 @@ async function processVideo(id: string, httpClient: HttpClient): Promise<Youtube
       }
     }
 
-    // Converter duração de segundos para formato MM:SS
-    if (duracao && !isNaN(Number(duracao))) {
-      const totalSeconds = parseInt(duracao);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      duracao = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }
-
     logger.debug(`Processado vídeo ${id} em ${Date.now() - startTime}ms`);
 
     return {
@@ -271,9 +253,7 @@ async function processVideo(id: string, httpClient: HttpClient): Promise<Youtube
       titulo: titulo.trim(),
       descricao: descricao.trim(),
       videoUrl: `https://www.youtube.com/watch?v=${id}`,
-      imgUrl: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-      duracao,
-      canal: canal.trim(),
+      imgUrl: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
     };
 
   } catch (error: any) {
@@ -318,9 +298,7 @@ async function searchYouTubeVideos(
                 titulo: videoData.title?.runs?.[0]?.text || "Título não disponível",
                 descricao: videoData.descriptionSnippet?.runs?.[0]?.text || "",
                 videoUrl: `https://www.youtube.com/watch?v=${videoData.videoId}`,
-                imgUrl: videoData.thumbnail?.thumbnails?.[0]?.url || `https://img.youtube.com/vi/${videoData.videoId}/maxresdefault.jpg`,
-                duracao: videoData.lengthText?.simpleText || "",
-                canal: videoData.ownerText?.runs?.[0]?.text || ""
+                imgUrl: videoData.thumbnail?.thumbnails?.[0]?.url || `https://i.ytimg.com/vi/${videoData.videoId}/hqdefault.jpg`,
               });
             }
           }
@@ -348,11 +326,9 @@ function formatVideoResponse(videos: YoutubeData[]): VideoAula[] {
     descricao: video.descricao,
     url: video.videoUrl,
     thumbnail: video.imgUrl,
-    duracao: video.duracao,
     videoId: video.videoId,
     videoUrl: video.videoUrl,
     imgUrl: video.imgUrl,
-    canal: video.canal,
   }));
 }
 

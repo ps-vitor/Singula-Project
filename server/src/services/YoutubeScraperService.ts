@@ -17,14 +17,15 @@ class YouTubeScraperService {
         () => scraper.scrapeChannelVideos(channelUrl, this.maxVideosPerChannel),
         this.maxRetries
       );
-      
+
+      if (!videos || videos.length === 0) {
+        throw new Error("No videos found after scraping");
+      }
+
       return scraper.formatVideoResponse(videos);
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        logger.error(`Erro ao obter vídeos do canal ${channelUrl}: ${error.message}`);
-        throw new Error(`CHANNEL_SCRAPE_FAILED: ${error.message}`);
-      }
-      throw new Error(`CHANNEL_SCRAPE_FAILED: Unknown error occurred`);
+      console.error("YouTube scraping error:", error);
+      throw error; // Propagate the error instead of returning fallback data
     }
   }
 
@@ -64,7 +65,7 @@ class YouTubeScraperService {
 }
 
 export{
-  YouTubeScraperService,
+  YouTubeScraperService
 }
 
 //done
