@@ -248,14 +248,13 @@ async function processVideo(id: string, httpClient: HttpClient): Promise<Youtube
 
     logger.debug(`Processado vídeo ${id} em ${Date.now() - startTime}ms`);
 
-    return {
+      return {
       videoId: id,
       titulo: titulo.trim(),
       descricao: descricao.trim(),
       videoUrl: `https://www.youtube.com/watch?v=${id}`,
-      imgUrl: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+      imgUrl: `https://img.youtube.com/vi/${id}/hqdefault.jpg`, 
     };
-
   } catch (error: any) {
     logger.error(`Erro ao processar vídeo ${id}: ${error.message}`);
     throw error;
@@ -325,12 +324,13 @@ function formatVideoResponse(videos: YoutubeData[]): VideoAula[] {
     titulo: video.titulo,
     descricao: video.descricao,
     url: video.videoUrl,
-    thumbnail: video.imgUrl,
+    thumbnail: video.imgUrl.replace('i.ytimg.com', 'img.youtube.com'), 
     videoId: video.videoId,
     videoUrl: video.videoUrl,
-    imgUrl: video.imgUrl,
+    imgUrl: video.imgUrl.replace('i.ytimg.com', 'img.youtube.com'), 
   }));
 }
+
 
 // Função utilitária para validar URL do YouTube
 function isValidYouTubeUrl(url: string): boolean {
