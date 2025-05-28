@@ -1,0 +1,17 @@
+.titulo{
+    padding: '20px'; 
+    width: '800px'; 
+    margin: '0 auto';
+}
+
+.aula{
+    aspect-ratio: '16/9';
+    margin-bottom: '30px';
+    border-radius: '8px';
+    overflow: 'hidden';
+}
+
+.descricao{
+    text-align: 'center';
+    margin-top: '30px'; 
+}
