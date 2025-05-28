@@ -5,6 +5,7 @@ import { errorHandler } from "./middleware/errorHandler.ts";
 import { requestLogger } from "./middleware/logger.ts";
 import { oakCors } from "../deps.ts";
 import { staticFileContentTypes } from '../../shared/types.ts';
+import videoRoutes from "./videos.ts";
 
 const clientDistPath = join(
   dirname(fromFileUrl(import.meta.url)),
@@ -129,5 +130,8 @@ app.use((ctx) => {
     };
   }
 });
+
+app.use(videoRoutes.routes());
+app.use(videoRoutes.allowedMethods());
 
 await app.listen({ port: 8000 });
